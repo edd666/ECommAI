@@ -11,7 +11,6 @@
 # packages
 import numpy as np
 from tqdm import tqdm
-import multiprocessing as mp
 from collections import defaultdict
 
 
@@ -68,74 +67,4 @@ def itemcf_sim(user_item_time_dict, location_weight=False, time_weight=False, no
         return i2i_sim
     else:
         return item_cnt, i2i_sim
-
-
-def _itemcf_sim_in_multiprocess(args):
-    """
-    计算物品相似度-多进程版本的内置函数
-
-    :param args: tuple 参数
-    :return:
-    """
-    # 参数
-    user_item_time_dict, location_weight, time_weight, normalization, item_cnt, i2i_sim, = args
-
-    # 物品频次以及相似度
-    item_cnt_, i2i_sim_ = itemcf_sim(user_item_time_dict, location_weight, time_weight, normalization)
-
-    # 合并结果
-    for item in item_cnt_:
-        item_cnt.setdefault(item, 0.0)
-        item_cnt[item] += item_cnt_[item]
-
-    for item, related_items in i2i_sim_.items():
-        i2i_sim.setdefault(item, dict())
-        d = i2i_sim[item]
-        for related_item, score in related_items.items():
-            d.setdefault(related_item, 0.0)
-            d[related_item] += score
-        i2i_sim[item] = d
-
-    return
-
-
-def itemcf_sim_in_multiprocess(user_item_time_dict, location_weight=False, time_weight=False):
-    """
-    计算物品相似度-多进程版本
-
-    注意: user_item_time_dict中行为已按时间升序排列.
-
-    :param user_item_time_dict: dict 用户行为序列,形如{u:[(i,t)]},其中t为时间戳,单位为s
-    :param location_weight: bool 是否采用位置加权
-    :param time_weight: bool 是否采用时间加权
-    :return:
-        i2i_sim: dict 物品相似度
-    """
-    # 1,初始化
-    users = list(user_item_time_dict.keys())
-    batch_size = 30000
-
-    # 2,计算物品相似度-不进行热度降权
-    pool = mp.Pool(20)
-    manager = mp.Manager()
-    item_cnt = manager.dict()
-    i2i_sim = manager.dict()
-    for idx in range(0, len(users), batch_size):
-        b_dict = dict()
-        for user in users[idx: idx + batch_size]:
-            b_dict[user] = user_item_time_dict[user]
-
-        args = (b_dict, location_weight, time_weight, False, item_cnt, i2i_sim)  # normalization=False
-        pool.apply_async(_itemcf_sim_in_multiprocess, (args,))
-
-    pool.close()
-    pool.join()
-
-    # 3,热度降权
-    item_cnt, i2i_sim = dict(item_cnt), dict(i2i_sim)  # multiprocessing的结果需要进行类型转换
-    for item, related_items in i2i_sim.items():
-        for related_item, score in related_items.items():
-            i2i_sim[item][related_item] = score / np.sqrt(item_cnt[item] * item_cnt[related_item])
-
-    return i2i_sim
 

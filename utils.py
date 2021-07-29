@@ -9,8 +9,6 @@
 """
 
 # packages
-import torch
-import random
 import numpy as np
 
 
@@ -58,24 +56,6 @@ def reduce_memory_usage(df):
     print('Decreased by {:.1f}%'.format(100 * (start_mem - end_mem) / start_mem))
 
     return df
-
-
-def setup_seed(seed):
-    """
-    设置随机种子
-
-    :param seed: int 随机种子
-    :return:
-    """
-    random.seed(seed)
-    np.random.seed(seed)
-
-    # pytorch
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-
-    return
 
 
 def build_user_behavior_sequence(df):
