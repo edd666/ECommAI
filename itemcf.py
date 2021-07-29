@@ -68,12 +68,3 @@ def itemcf_sim(user_item_time_dict, location_weight=False, time_weight=False, no
         return i2i_sim
     else:
         return item_cnt, i2i_sim
-
-
-def evaluation(user_item_time_dict, i2i_sim, valid_user_item_time_dict):
-    # 1,初始化
-    users = list(valid_user_item_time_dict.keys())
-    num_cpus = 10
-    batch_size = len(users) // num_cpus
-
-    pass
