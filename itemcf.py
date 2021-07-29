@@ -30,7 +30,7 @@ def itemcf_sim(user_item_time_dict, location_weight=False, time_weight=False, no
     """
     # 1,物品相似度
     item_cnt = defaultdict(int)  # item count
-    i2i_sim = defaultdict(dict)  # item smi
+    i2i_sim_ = defaultdict(dict)  # item smi 临时变量
     for user, item_time_list in tqdm(user_item_time_dict.items()):
         for loc1, (item1, time1) in enumerate(item_time_list):
             item_cnt[item1] += 1
@@ -56,15 +56,24 @@ def itemcf_sim(user_item_time_dict, location_weight=False, time_weight=False, no
                     t_weight = 1
 
                 # 相似度
-                i2i_sim[item1].setdefault(item2, 0.0)
-                i2i_sim[item1][item2] += loc_weight * t_weight / np.log(len(item_time_list) + 1)
+                i2i_sim_[item1].setdefault(item2, 0.0)
+                i2i_sim_[item1][item2] += loc_weight * t_weight / np.log(len(item_time_list) + 1)
 
     # 2,热度降权
+    i2i_sim = i2i_sim_.copy()
     if normalization:
-        for item, related_items in i2i_sim.items():
+        for item, related_items in i2i_sim_.items():
             for related_item, score in related_items.items():
                 i2i_sim[item][related_item] = score / np.sqrt(item_cnt[item] * item_cnt[related_item])
         return i2i_sim
     else:
         return item_cnt, i2i_sim
 
+
+def evaluation(user_item_time_dict, i2i_sim, valid_user_item_time_dict):
+    # 1,初始化
+    users = list(valid_user_item_time_dict.keys())
+    num_cpus = 10
+    batch_size = len(users) // num_cpus
+
+    pass
