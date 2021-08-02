@@ -49,7 +49,7 @@ def itemcf_sim(user_item_time_dict, location_weight=False, time_weight=False, no
                 # 时间权重
                 if time_weight:
                     if isinstance(time1, int):
-                        t_weight = np.exp(0.7 ** (np.abs(time1 - time2)))
+                        t_weight = np.exp(0.7 ** (np.abs(time1 - time2) // 3600))
                     else:
                         raise ValueError('time in user_item_time_dict must be int')
                 else:
